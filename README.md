@@ -14,6 +14,6 @@ pip install -r requirements.txt
 <p align="center"> then add bot details in config.json file</p>
 
 <h1 align="center"> Help </h1>
-<p align="center"> [Join the discord](https://kahootbotter.live/discord/) </p>
+<p align="center"> Join the discord </p>
 
 ![Footer](./footer.png)
