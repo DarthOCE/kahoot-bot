@@ -1,5 +1,6 @@
 import asyncio
 import datetime, time
+import json
 from itertools import cycle
 
 
@@ -10,8 +11,10 @@ from discord_slash import SlashCommand
 from kahoot import client as account
 
 
-token = ""
-client = commands.Bot(command_prefix='k!')
+config = json.load(open('config.json', 'r'))
+token = config["token"]
+prefix = config["prefix"]
+client = commands.Bot(command_prefix=prefix)
 client.remove_command('help')
 slash = SlashCommand(client, sync_commands=True)
 
@@ -208,66 +211,67 @@ async def invite(ctx):
 
 @client.command()
 async def ping(ctx):
-    embed = discord.Embed(
-        title="We are migrating too slash commands",
-        colour=discord.Colour.purple()
-    )
-    embed.set_footer(text=f"Requested by {ctx.author}")
-    embed.set_thumbnail(
-        url="https://cdn.discordapp.com/avatars/894342726210945054/f4075ae8075d339297c1b24e44752c26.png?size=256")
-    embed.add_field(name="Bot Invite",
-                    value="You can add the bot [here](https://discord.com/api/oauth2/authorize?client_id=894342726210945054&permissions=397284502592&scope=bot%20applications.commands)", inline=True)
-    embed.add_field(name="You must reinvite the bot too this server too use slash commands if they are not already present", value="https://kahootbotter.live/bot/", inline=True)
-                                 
-    await ctx.send(embed=embed)
+    embed = discord.Embed(title=":ping_pong: Response Times :ping_pong:", color=discord.Colour.blue())
+    embed.add_field(name="API", value=f"`Loading...`")
+    embed.add_field(name="Websocket", value=f"`{int(client.latency * 1000)}ms`")
+    embed.add_field(name="Uptime", value=f"`{str(datetime.timedelta(seconds=int(round(time.time()-startTime))))}`")
+    time_before = time.time()
+    edit = await ctx.send(embed=embed, content=f"{ctx.author.mention}")
+    time_after = time.time()
+    difference = int((time_after - time_before) * 1000)
+    embed = discord.Embed(title=":ping_pong: Response Times :ping_pong:", color=discord.Colour.green())
+    embed.add_field(name="API", value=f"`{difference}ms`")
+    embed.add_field(name="Websocket", value=f"`{int(client.latency * 1000)}ms`")
+    embed.add_field(name="Uptime", value=f"`{str(datetime.timedelta(seconds=int(round(time.time()-startTime))))}`")
+    await edit.edit(embed=embed, content=f"{ctx.author.mention}")
 
 
 
 @client.command(aliases=["bot"])
 async def flood(ctx):
-    embed = discord.Embed(
-        title="We are migrating too slash commands",
-        colour=discord.Colour.purple()
-    )
-    embed.set_footer(text=f"Requested by {ctx.author}")
-    embed.set_thumbnail(
-        url="https://cdn.discordapp.com/avatars/894342726210945054/f4075ae8075d339297c1b24e44752c26.png?size=256")
-    embed.add_field(name="Bot Invite",
-                    value="You can add the bot [here](https://discord.com/api/oauth2/authorize?client_id=894342726210945054&permissions=397284502592&scope=bot%20applications.commands)", inline=True)
-    embed.add_field(name="You must reinvite the bot too this server too use slash commands if they are not already present", value="https://kahootbotter.live/bot/", inline=True)
-                                 
-    await ctx.send(embed=embed)
+    await ctx.send(f"Sending {n} bots too {pin}...\n")
+    print(f"Recived request from {ctx.author.mention} sending {n} bots to {pin} with the name {name}")
+
+    n = int(n)
+    index = 0
+    while (index != n):
+        bot = account()
+        bot.join(pin, f"{name}{index + 1}")
+        bots.append(bot)
+        index += 1
+
+    await ctx.send("Bots sent successfully")
+    print(f"Completed request from {ctx.author.mention} sending {n} bots to {pin} with the name {name}")
+    await ctx.message.add_reaction("✅")
 
 
 @client.command()
 async def leave(ctx):
-    embed = discord.Embed(
-        title="We are migrating too slash commands",
-        colour=discord.Colour.purple()
-    )
-    embed.set_footer(text=f"Requested by {ctx.author}")
-    embed.set_thumbnail(
-        url="https://cdn.discordapp.com/avatars/894342726210945054/f4075ae8075d339297c1b24e44752c26.png?size=256")
-    embed.add_field(name="Bot Invite",
-                    value="You can add the bot [here](https://discord.com/api/oauth2/authorize?client_id=894342726210945054&permissions=397284502592&scope=bot%20applications.commands)", inline=True)
-    embed.add_field(name="You must reinvite the bot too this server too use slash commands if they are not already present", value="https://kahootbotter.live/bot/", inline=True)
-                                 
-    await ctx.send(embed=embed)
+    await ctx.message.add_reaction("👋")
+    await ctx.send("Disconnecting the bots...")
+
+    for bot in bots:
+        bot.leave()
+
+    bots.clear()
+    await ctx.send("Bots disconnected")
 
 
 @client.command()
 async def help(ctx):
     embed = discord.Embed(
-        title="We are migrating too slash commands",
+        title="https://kahootbotter.live",
         colour=discord.Colour.purple()
     )
     embed.set_footer(text=f"Requested by {ctx.author}")
     embed.set_thumbnail(
         url="https://cdn.discordapp.com/avatars/894342726210945054/f4075ae8075d339297c1b24e44752c26.png?size=256")
-    embed.add_field(name="Bot Invite",
-                    value="You can add the bot [here](https://discord.com/api/oauth2/authorize?client_id=894342726210945054&permissions=397284502592&scope=bot%20applications.commands)", inline=True)
-    embed.add_field(name="You must reinvite the bot too this server too use slash commands if they are not already present", value="https://kahootbotter.live/bot/", inline=True)
-                                 
+    embed.add_field(name="help", value="● Displays all bot commands.", inline=False)
+    embed.add_field(name="ping", value="● Displays bot latancy and uptime.", inline=True)
+    embed.add_field(name="invite", value="● Invite the bot too your server!.", inline=True)
+    embed.add_field(name="flood / bot <pin> <name> <n>",
+    value="● Kahoot Pin <pin>.\n⠀⠀<name> Name the bots. \n⠀⠀<n> How many bots you want to send.\n⠀⠀(Ex: k!flood 1234567 Botted 1000)", inline=False)
+    embed.add_field(name="leave", value="● Disconnects the bots from the kahoot", inline=False)
     await ctx.send(embed=embed)
 
 
